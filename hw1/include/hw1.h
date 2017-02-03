@@ -1,5 +1,7 @@
 #ifndef HW_H
 #define HW_H
+#define TRUE 1
+#define FALSE 0
 #include <stdlib.h>
 #include <stdio.h>
 
