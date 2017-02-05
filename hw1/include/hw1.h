@@ -21,6 +21,9 @@
  */
 char validargs(int argc, char **argv, FILE **in, FILE **out);
 
+void subEncode(FILE** in, FILE** out, int n);
+void subDecode(FILE** in, FILE** out, int n);
+
 
 #define USAGE(retcode) do{                                                        \
 fprintf(stderr, "%s\n",                                                           \

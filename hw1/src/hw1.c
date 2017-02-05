@@ -89,7 +89,10 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
 	char* arg4 = *(argv + 4);	//output path
 	if(*arg4 == DASH)
 		*out = stdout;
-	*out = fopen(arg4, "w");
+	else
+		*out = fopen(arg4, "w");
+	if(*out == NULL)
+		return 0;
 
 	char* arg5;
 	int shiftVal;
@@ -107,3 +110,67 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
 	ret = ret | shiftVal;
 	return ret;
 }
+
+int charPosition(char* Alphabet, char letter){
+	int pos = -1;
+	char currChar = *Alphabet;
+	for (int i = 0; currChar != '\0'; i++){
+		currChar = *(Alphabet + i);
+		if(currChar == letter)
+			return i;
+	}
+
+	return pos;
+}
+
+char encodeChar(char* Alphabet, char letter, int n)
+{
+	int oldPos = charPosition(Alphabet, letter);
+	if(oldPos == -1)
+		return letter;
+
+	int length = stringLength(Alphabet);
+
+	int newPos = (oldPos + n)%length;
+	return *(Alphabet + newPos);
+}
+
+void subEncode(FILE** in, FILE** out, int n){
+	char currChar = (char)fgetc(*in);;
+	char encodedChar;
+	while(currChar != EOF)
+	{
+		if((int)currChar >= 97 && (int)currChar <= 122){
+			currChar = (currChar - 32);
+		}
+		encodedChar = encodeChar(Alphabet, currChar, n);
+		fprintf(*out, "%c", encodedChar);
+		currChar = (char)fgetc(*in);
+	}
+}
+
+char decodeChar(char* Alphabet, char letter, int n)
+{
+	int oldPos = charPosition(Alphabet, letter);
+	if(oldPos == -1)
+		return letter;
+
+	int length = stringLength(Alphabet);
+
+	int newPos = (oldPos - n)%length;
+	if(newPos < 0)
+		newPos = newPos + length;
+	return *(Alphabet + newPos);
+}
+
+void subDecode(FILE** in, FILE** out, int n){
+	char currChar = (char)fgetc(*in);;
+	char decodedChar;
+	while(currChar != EOF)
+	{
+		decodedChar = decodeChar(Alphabet, currChar, n);
+		fprintf(*out, "%c", decodedChar);
+		currChar = (char)fgetc(*in);
+	}
+}
+

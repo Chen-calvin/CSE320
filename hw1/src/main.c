@@ -14,5 +14,12 @@ int main(int argc, char **argv) {
     if((int)ret == -128)
     	USAGE(EXIT_SUCCESS);
 
+    int n = (int)(ret & 0x1F);
+    if((ret & 0x40) == 64){
+    	if((ret & 0x20) == 32)
+    		subDecode(&in, &out, n);
+    	else
+    		subEncode(&in, &out, n);
+    }
     return EXIT_SUCCESS;
 }
