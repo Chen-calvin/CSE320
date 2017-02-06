@@ -21,5 +21,16 @@ int main(int argc, char **argv) {
     	else
     		subEncode(&in, &out, n);
     }
+    else{
+    	if((ret & 0x20) == 32){
+    		tutDecode(&in, &out);
+        }
+    	else{
+    		tutEncode(&in, &out);
+        }
+    }
+
+    fclose(in);
+    fclose(out);
     return EXIT_SUCCESS;
 }

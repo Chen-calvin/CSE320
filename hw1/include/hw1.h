@@ -23,6 +23,8 @@ char validargs(int argc, char **argv, FILE **in, FILE **out);
 
 void subEncode(FILE** in, FILE** out, int n);
 void subDecode(FILE** in, FILE** out, int n);
+void tutEncode(FILE** in, FILE** out);
+void tutDecode(FILE** in, FILE** out);
 
 
 #define USAGE(retcode) do{                                                        \
