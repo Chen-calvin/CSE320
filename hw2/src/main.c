@@ -1,6 +1,8 @@
 #include "hw2.h"
+#include <getopt.h>
 
 int main(int argc, char *argv[]){
+    char DEFAULT_DICT_FILE[]= "dictionary.txt";
     DEFAULT_INPUT = stdin;
     DEFAULT_OUTPUT = stdout;
     //create dictionary
@@ -19,19 +21,38 @@ int main(int argc, char *argv[]){
 
     struct Args args;
     // Set struct default values
+    args.h = false;
     args.d = false;
     args.i = false;
     args.o = false;
+    args.a = -1;
     strcpy(args.dictFile, DEFAULT_DICT_FILE);
     // Make a loop index
-    int i;
     char line[MAX_SIZE];
     //Declare Files
-    FILE* dFile;
+    //FILE* dFile;
     FILE* iFile = DEFAULT_INPUT;
     FILE* oFile = DEFAULT_OUTPUT;
 
-    char opt = '\0';
+    char* endPtr;
+    int opt = 0;
+    while((opt = getopt(argc, argv, "h:o:i:d:a:")) != -1){
+        switch(opt){
+            case 'h' :
+                USAGE(EXIT_SUCCESS);
+                exit(EXIT_SUCCESS);
+            case 'o' : args.o = true; strcpy(args.output, optarg);
+                break;
+            case 'i' : args.i = true; strcpy(args.input, optarg);
+                break;
+            case 'd' : args.d = true; strcpy(args.dictFile, optarg);
+                break;
+            case 'a' : args.a = strtol(optarg, &endPtr, 10);
+                break;
+        }
+    }
+
+    /*char opt = '\0';
     for(i = 1; i< argc; i++)
     {
         char* currArg = argv[i];
@@ -67,9 +88,10 @@ int main(int argc, char *argv[]){
                 opt = 'o';
         }
     }
+
     dFile = fopen(args.dictFile, "r");
 
-    if(iFile == NULL && args.i == true)
+    if(iFile == NULL && args.i == )
     {
         printf("Unable to open: %s.\n", args.input);
         return EXIT_FAILURE;
@@ -82,7 +104,7 @@ int main(int argc, char *argv[]){
     {
         processDictionary(dFile);
 
-    }
+    }*/
 
     strcpy(line,"\n--------INPUT FILE WORDS--------\n");
     fwrite(line, strlen(line)+1, 1, oFile);
@@ -100,7 +122,7 @@ int main(int argc, char *argv[]){
         if((line[strlen(line)-1] != ' ') && (line[strlen(line)-1] != '\n'))
             strcat(line, " ");
         //replaces spaces within a line with new lines
-        while(*character != NULL)
+        while(character != NULL)
         {
             if(*character == ' ' || *character == '\n')
             {
@@ -114,7 +136,7 @@ int main(int argc, char *argv[]){
                 printf("%d", strlen(wdPtr)-strlen(punct));
                 */
 
-                *wdPtr = NULL;
+                //*wdPtr = NULL;
                 wdPtr = word;
 
                 processWord(wdPtr);
@@ -144,7 +166,7 @@ int main(int argc, char *argv[]){
     //free m_list
     free(m_list);
 
-    fclose(dFile);
+    //fclose(dFile);
     fclose(iFile);
     fclose(oFile);
     return EXIT_SUCCESS;
