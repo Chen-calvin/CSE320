@@ -30,81 +30,64 @@ int main(int argc, char *argv[]){
     // Make a loop index
     char line[MAX_SIZE];
     //Declare Files
-    //FILE* dFile;
+    FILE* dFile;
     FILE* iFile = DEFAULT_INPUT;
     FILE* oFile = DEFAULT_OUTPUT;
 
     char* endPtr;
-    int opt = 0;
-    while((opt = getopt(argc, argv, "h:o:i:d:a:")) != -1){
+    char opt = 0;
+    while((opt = getopt(argc, argv, "h:o:i:d:A:")) != -1){
         switch(opt){
             case 'h' :
                 USAGE(EXIT_SUCCESS);
                 exit(EXIT_SUCCESS);
-            case 'o' : args.o = true; strcpy(args.output, optarg);
+            case 'o' :
+                args.o = true;
+                strcpy(args.output, optarg);
                 break;
-            case 'i' : args.i = true; strcpy(args.input, optarg);
+            case 'i' :
+                args.i = true;
+                strcpy(args.input, optarg);
                 break;
-            case 'd' : args.d = true; strcpy(args.dictFile, optarg);
+            case 'd' :
+                args.d = true;
+                strcpy(args.dictFile, optarg);
                 break;
-            case 'a' : args.a = strtol(optarg, &endPtr, 10);
+            case 'A' :
+                args.a = strtol(optarg, &endPtr, 10);
                 break;
+            default:
+                exit(EXIT_FAILURE);
         }
     }
+    printf("%s\n", args.output);
 
-    /*char opt = '\0';
-    for(i = 1; i< argc; i++)
-    {
-        char* currArg = argv[i];
-        //there's a flag
-        if(opt != '\0')
-        {
-            if(opt == 'd')
-            {
-                strcpy(args.dictFile, currArg);
-                args.d = true;
-            }
-            if(opt == 'i')
-            {
-                strcpy(args.input, currArg);
-                args.i = true;
-                iFile = fopen(currArg, "r");
-            }
-            if(opt == 'o')
-            {
-                strcpy(args.output, currArg);
-                args.o = true;
-                oFile = fopen(currArg, "w");
-            }
-            opt = '\0';
-        }
-        else
-        {
-            if(strcmp(currArg, "-d") == 0)
-                opt = 'd';
-            if(strcmp(currArg, "-i") == 0)
-                opt = 'i';
-            if(strcmp(currArg, "-o") == 0)
-                opt = 'o';
-        }
+    exit(EXIT_SUCCESS);
+
+    if(args.i == true)
+        iFile = fopen(args.input, "r");
+    if(iFile == NULL){
+        USAGE(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
+    }
+
+    if(args.o == true)
+        oFile = fopen(args.output, "w");
+    if(oFile == NULL){
+        USAGE(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 
     dFile = fopen(args.dictFile, "r");
-
-    if(iFile == NULL && args.i == )
-    {
-        printf("Unable to open: %s.\n", args.input);
-        return EXIT_FAILURE;
-    }
-    if(dFile == NULL)
-    {
-        printf("Unable to open: %s.\n", args.dictFile);
+    if(dFile == NULL){
+        USAGE(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
     else
     {
         processDictionary(dFile);
 
-    }*/
+    }
 
     strcpy(line,"\n--------INPUT FILE WORDS--------\n");
     fwrite(line, strlen(line)+1, 1, oFile);
