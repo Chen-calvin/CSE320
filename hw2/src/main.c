@@ -2,7 +2,7 @@
 #include <getopt.h>
 
 int main(int argc, char *argv[]){
-    char DEFAULT_DICT_FILE[]= "dictionary.txt";
+    char DEFAULT_DICT_FILE[]= "rsrc/dictionary.txt";
     DEFAULT_INPUT = stdin;
     DEFAULT_OUTPUT = stdout;
     //create dictionary
@@ -17,7 +17,7 @@ int main(int argc, char *argv[]){
         printf("ERROR: OUT OF MEMORY.\n");
         return EXIT_FAILURE;
     }
-    m_list = NULL;
+    struct misspelled_word* m_list_ptr = m_list;
 
     struct Args args;
     // Set struct default values
@@ -60,9 +60,6 @@ int main(int argc, char *argv[]){
                 exit(EXIT_FAILURE);
         }
     }
-    printf("%s\n", args.output);
-
-    exit(EXIT_SUCCESS);
 
     if(args.i == true)
         iFile = fopen(args.input, "r");
@@ -86,7 +83,6 @@ int main(int argc, char *argv[]){
     else
     {
         processDictionary(dFile);
-
     }
 
     strcpy(line,"\n--------INPUT FILE WORDS--------\n");

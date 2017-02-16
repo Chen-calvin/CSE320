@@ -54,7 +54,7 @@ struct dict_word{
 
 struct misspelled_word{
     char word[WORDLENGTH];
-    int misspelled; // initialize to 0
+    bool misspelled; // initialize to 0
     struct dict_word* correct_word;
     struct misspelled_word* next;
 };
@@ -96,7 +96,7 @@ void addMisspelledWord(struct misspelled_word * misspelledWord, struct dict_word
  */
 void freeWords(struct dict_word* word);
 
-
+void freeMisspelledWords(struct misspelled_word* currWord);
 
 /**
  * @brief      Print the words

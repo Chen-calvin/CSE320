@@ -4,6 +4,8 @@
 
 void processDictionary(FILE* f){
     dict->num_words = 0;
+    char line[MAX_SIZE];
+    fgets(line, MAX_SIZE, f);
     while(!feof(f))
     {
         //initialize the current word.
@@ -15,29 +17,28 @@ void processDictionary(FILE* f){
         }
         currWord->num_misspellings = 0;
         currWord->misspelled_count = 0;
+        m_list = NULL;
 
         //variables
         char word[MAX_SIZE];
         char* wdPtr = word;
-        char line[MAX_SIZE];
         char* character = line;
         //char word_list[MAX_MISSPELLED_WORDS+1][MAX_SIZE];
         int counter = 0;
         int firstWord = 1;
 
-        fgets(line, MAX_SIZE+1, f);
         //if there isn't a space at the end of the line, put one there
         if((line[strlen(line)-2] != ' ' && line[strlen(line)-1] == '\n') || (line[strlen(line)-1] != ' ' && line[strlen(line)-1] != '\n'))
             strcat(line, " ");
 
-        while(character != NULL)
+        while(*character != '\0')
         {
-            if(counter >= MAX_MISSPELLED_WORDS+1)
+            if(counter > MAX_MISSPELLED_WORDS)
                 break;
             //if the character is a space, add the word in word_list and make word NULL.
             if(*character == ' ')
             {
-                *wdPtr = *word;
+                *(wdPtr++) = '\0';
                 wdPtr = word;
                 if(firstWord)
                 {
@@ -63,6 +64,7 @@ void processDictionary(FILE* f){
                 *(wdPtr++) = *character;
             character++;
         }
+        fgets(line, MAX_SIZE, f);
     }
 }
 
@@ -81,17 +83,23 @@ void addMisspelledWord(struct misspelled_word* misspelledWord, struct dict_word*
     misspelledWord->misspelled = 0;
     misspelledWord->correct_word = correctWord;
     misspelledWord->next = m_list;
-    (correctWord->misspelled)[++correctWord->num_misspellings] = misspelledWord;
+    (correctWord->misspelled)[correctWord->num_misspellings] = misspelledWord;
+    correctWord->num_misspellings++;
     m_list = misspelledWord;
 }
 
 void freeWords(struct dict_word* currWord){
-    if(currWord != NULL)
-    {
-        freeWords(currWord);
+    if(currWord != NULL){
+        freeWords(currWord->next);
+        freeMisspelledWords((currWord->misspelled)[(currWord->num_misspellings)-1]);
+        printf("FREED %s\n", currWord->word);
+        free(currWord);
+    }
+}
 
-        //int i;
-        //free word
+void freeMisspelledWords(struct misspelled_word* currWord){
+    if(currWord != NULL){
+        freeMisspelledWords(currWord->next);
         printf("FREED %s\n", currWord->word);
         free(currWord);
     }
