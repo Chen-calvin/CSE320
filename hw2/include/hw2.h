@@ -32,7 +32,7 @@ struct Args{
     bool i;
     bool o;
     bool d;
-    int a;
+    int A;
 
     char dictFile[MAX_SIZE];
     char input[MAX_SIZE];
@@ -104,7 +104,7 @@ void freeMisspelledWords(struct misspelled_word* currWord);
  * @param      word  The word
  * @param      f     { parameter_description }
  */
-void printWords(struct dict_word* word, FILE* f);
+void printWords(struct dict_word* word, FILE** f);
 
 
 
@@ -113,7 +113,7 @@ void printWords(struct dict_word* word, FILE* f);
  *
  * @param      inputWord  The input word
  */
-void processWord(char* inputWord);
+void processWord(char* inputWord, int A, FILE** output);
 
 
 
@@ -124,7 +124,7 @@ void processWord(char* inputWord);
  *
  * @return     boolean
  */
-bool foundMisspelledMatch(char* inputWord);
+char* foundMisspelledMatch(char* inputWord);
 
 
 
@@ -136,5 +136,10 @@ bool foundMisspelledMatch(char* inputWord);
  * @return     boolean
  */
 bool foundDictMatch(char* inputWord);
+
+int fLetterPos(char* word);
+int lLetterPos(char* word);
+
+int misspelledWordNum(struct dict_word* head);
 
 #endif
