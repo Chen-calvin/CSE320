@@ -207,4 +207,8 @@ void sf_blockprint(void* block);
  */
 void sf_varprint(void *data);
 
+void* find_fit(size_t asize);
+
+void place(sf_free_header* bp, size_t block_size, size_t padding, size_t reqSize);
+
 #endif
