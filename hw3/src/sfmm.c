@@ -186,8 +186,8 @@ void sf_free(void* ptr) {
 		else{
 			header->prev = spot;
 			header->next = spot->next;
-			spot->next = header;
 			spot->next->prev = header;
+			spot->next = header;
 		}
 	coalesce(header);
 }
@@ -200,29 +200,31 @@ void* coalesce(sf_free_header* bp){
 	if(bp->prev != NULL)
 		prev_alloc = ((sf_footer*)((char*)bp - SF_HEADER_SIZE))->alloc;
 	if(bp->next != NULL)
-		next_alloc = ((sf_free_header*)((char*)bp + size))->header.alloc;
+		next_alloc = ((sf_free_header*)((char*)(bp) + (size * 16)))->header.alloc;
 
-	if((prev_alloc == 1 && next_alloc == 1) || (prev_alloc == -1 && next_alloc == -1))
+	if((prev_alloc == 1 || prev_alloc == -1) && (next_alloc == 1 && prev_alloc == -1))
 		return bp;
 	else if((prev_alloc == 1 && next_alloc == 0) || (prev_alloc == -1 && next_alloc == 0)){
 		size += bp->next->header.block_size;
 		bp->header.block_size = size;
-		((sf_footer*)((char*)bp->next + bp->next->header.block_size - SF_FOOTER_SIZE))->block_size = size;
+		((sf_footer*)((char*)bp + (size * 16) - SF_FOOTER_SIZE))->block_size = size;
+		if(bp->next->next != NULL)
+			bp->next->next->prev = bp;
 		bp->next = bp->next->next;
-		bp->next->next->prev = bp;
 	}
 		else if((prev_alloc == 0 && next_alloc == 1) || (prev_alloc == 0 && next_alloc == -1)){
 			size += bp->prev->header.block_size;
 			bp->prev->header.block_size = size;
-			((sf_footer*)((char*)bp + bp->header.block_size - SF_FOOTER_SIZE))->block_size = size;
+			((sf_footer*)((char*)bp + (bp->header.block_size * 16) - SF_FOOTER_SIZE))->block_size = size;
 			bp->prev->next = bp->next;
-			bp->next->prev = bp->prev;
+			if(bp->next != NULL)
+				bp->next->prev = bp->prev;
 			bp = bp->prev;
 		}
 		else{
 			size += bp->next->header.block_size + bp->prev->header.block_size;
 			bp->prev->header.block_size = size;
-			((sf_footer*)((char*)bp->next + bp->next->header.block_size - 8))->block_size = size;
+			((sf_footer*)((char*)bp->next + (bp->next->header.block_size * 16) - 8))->block_size = size;
 			bp->prev->next = bp->next->next;
 			bp->next->prev = bp->prev->prev;
 			bp = bp->prev;
