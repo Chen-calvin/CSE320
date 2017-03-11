@@ -26,6 +26,7 @@ static size_t splintering = 0;
 static size_t coalesces = 0;
 static size_t totalPayload = 0;
 static size_t totalHeap = 0;
+static double peakMemoryUtilization = 0;
 
 void *sf_malloc(size_t size) {
 	size_t block_size;
@@ -74,7 +75,7 @@ void* find_fit(size_t asize){
 	sf_free_header* bp = NULL;
 	int sizeDiff = INT_MAX;
 	do{
-		if(currBlock->header.block_size > asize && currBlock->header.block_size - asize < sizeDiff){
+		if((currBlock->header.block_size * 16) > asize && (currBlock->header.block_size * 16) - asize < sizeDiff){
 			sizeDiff = currBlock->header.block_size - asize < sizeDiff;
 			bp = currBlock;
 		}
@@ -149,6 +150,7 @@ void place(sf_free_header* bp, size_t block_size, size_t padding, size_t reqSize
 		}
 	}
 	allocatedBlocks++;
+	peakMemoryUtilization = calcPMU();
 }
 
 void *sf_realloc(void *ptr, size_t size) {
@@ -190,6 +192,10 @@ void sf_free(void* ptr) {
 			spot->next = header;
 		}
 	coalesce(header);
+	allocatedBlocks--;
+	totalPayload -= (header->header.block_size - 1) * 16;
+	peakMemoryUtilization = calcPMU();
+	padding -= ((sf_free_header*)ptr)->header.padding_size;
 }
 
 void* coalesce(sf_free_header* bp){
@@ -241,4 +247,12 @@ int sf_info(info* ptr) {
 	ptr->coalesces = coalesces;
 	ptr->peakMemoryUtilization = (double)totalPayload / totalHeap;
 	return -1;
+}
+
+double calcPMU(){
+	static int maxPayload = 0;
+	if(totalPayload > maxPayload)
+		maxPayload = totalPayload;
+
+	return (double)maxPayload / totalHeap;
 }

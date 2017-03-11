@@ -7,4 +7,6 @@ void place(sf_free_header* bp, size_t block_size, size_t padding, size_t reqSize
 
 void* coalesce(sf_free_header* bp);
 
+double calcPMU();
+
 #endif
