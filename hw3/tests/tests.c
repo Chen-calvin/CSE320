@@ -41,7 +41,7 @@ Test(sf_memsuite, SplinterSize_Check_char, .init = sf_mem_init, .fini = sf_mem_f
   cr_assert(sfHeader->splinter_size == 16, "Splinter size is not 16");
 
   sf_footer *sfFooter = (sf_footer *)((char*)sfHeader + (sfHeader->block_size << 4) - 8);
-  cr_assert(sfFooter->splinter == 1, "Splinter bit in header is not 1!");
+  cr_assert(sfFooter->splinter == 1, "Splinter bit in footer is not 1!");
 }
 
 Test(sf_memsuite, Check_next_prev_pointers_of_free_block_at_head_of_list, .init = sf_mem_init, .fini = sf_mem_fini) {
@@ -67,3 +67,49 @@ Test(sf_memsuite, Coalesce_no_coalescing, .init = sf_mem_init, .fini = sf_mem_fi
 //STUDENT UNIT TESTS SHOULD BE WRITTEN BELOW
 //DO NOT DELETE THESE COMMENTS
 //#
+
+Test(sf_memsuite, Coalesce_case1, .init = sf_mem_init, .fini = sf_mem_fini){
+  int* value1 = sf_malloc(4);
+  int* value2 = sf_malloc(4);
+  int* value3 = sf_malloc(4);
+  (void)value1;
+  (void)value2;
+  (void)value3;
+
+  sf_free(value1);
+  sf_free(value2);
+
+  cr_assert(freelist_head->header.block_size = 64, "Case 1 coalesce fail");
+}
+
+Test(sf_memsuite, Coalesce_case2, .init = sf_mem_init, .fini = sf_mem_fini){
+  int* value1 = sf_malloc(4);
+  int* value2 = sf_malloc(4);
+  int* value3 = sf_malloc(4);
+  (void)value1;
+  (void)value2;
+  (void)value3;
+
+  sf_free(value2);
+  sf_free(value1);
+
+  cr_assert(freelist_head->header.block_size = 64, "Case 1 coalesce fail");
+}
+
+Test(sf_memsuite, Coalesce_case3, .init = sf_mem_init, .fini = sf_mem_fini){
+  int* value1 = sf_malloc(4);
+  int* value2 = sf_malloc(4);
+  int* value3 = sf_malloc(4);
+  int* value4 = sf_malloc(4);
+  (void)value1;
+  (void)value2;
+  (void)value3;
+  (void)value4;
+
+  sf_free(value1);
+  sf_free(value3);
+  sf_free(value2);
+
+  cr_assert(freelist_head->header.block_size = 96, "Case 1 coalesce fail");
+}
+

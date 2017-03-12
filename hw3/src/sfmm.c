@@ -5,6 +5,7 @@
  */
 #include "sfmm.h"
 #include "hw3.h"
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -49,7 +50,7 @@ void *sf_malloc(size_t size) {
 		freelist_head->prev = NULL;
 		((sf_footer*)(freelist_head + freelist_head->header.block_size - 8))->alloc = 0;
 		((sf_footer*)(freelist_head + freelist_head->header.block_size - 8))->splinter = 0;
-		((sf_footer*)(freelist_head + freelist_head->header.block_size - 8))->block_size = 4096;
+		((sf_footer*)(freelist_head + freelist_head->header.block_size - 8))->block_size = 256;
 	}
 
 	if(size < 16)
@@ -61,8 +62,24 @@ void *sf_malloc(size_t size) {
 
 	sf_free_header* freeBlock = find_fit(block_size);
 	if(freeBlock == NULL){
-		sf_free_header* bp = freelist_head = (sf_free_header*)sf_sbrk;
-		place(freelist_head, block_size, padding_size, size);
+		sf_free_header* bp = (sf_free_header*)sf_sbrk(4096);
+		freelist_head->header.alloc = 0;
+		freelist_head->header.block_size = 256;
+		freelist_head->next = NULL;
+		freelist_head->prev = NULL;
+		((sf_footer*)(freelist_head + freelist_head->header.block_size - 8))->alloc = 0;
+		((sf_footer*)(freelist_head + freelist_head->header.block_size - 8))->splinter = 0;
+		((sf_footer*)(freelist_head + freelist_head->header.block_size - 8))->block_size = 256;
+		sf_free_header* tmp = freelist_head;
+		sf_free_header* prev = NULL;
+		while(tmp != NULL){
+			prev = tmp;
+			tmp = tmp->next;
+		}
+		prev->next = bp;
+		bp->prev = prev;
+		bp = coalesce(bp);
+		place(bp, block_size, padding_size, size);
 		return (char*)bp + SF_HEADER_SIZE;
 	}
 	else
@@ -154,6 +171,99 @@ void place(sf_free_header* bp, size_t block_size, size_t padding, size_t reqSize
 }
 
 void *sf_realloc(void *ptr, size_t size) {
+	sf_free_header* bp = ((sf_free_header*)((char*)ptr - SF_HEADER_SIZE));
+	size_t block_size = 0;
+	size_t curr_block_size = bp->header.block_size * 16;
+	if(size < 16)
+		block_size = 32;
+	else
+		block_size = 16 * ((size + 31)/16);
+
+	if(block_size == curr_block_size)
+		return (char*)ptr + SF_HEADER_SIZE;
+	else if(block_size < curr_block_size){		//Shrinking block
+		if(curr_block_size - block_size < 32){	//Splinter
+			if(((sf_free_header*)((char*)ptr + curr_block_size))->header.alloc == 1){ //If next block is alloc, nothing
+				return ptr;
+				splintering++;
+			}
+			else{	//If next block is free, coalesce
+				size_t next_block_size = ((sf_free_header*)((char*)bp + bp->header.block_size))->header.block_size;
+				size_t newSize = next_block_size + 16;
+				sf_free_header* next_block = (sf_free_header*)((char*)bp + curr_block_size);
+				((sf_footer*)(next_block + next_block_size - SF_FOOTER_SIZE))->block_size = newSize / 16;
+				sf_free_header* new_header = (sf_free_header*)((char*)bp + block_size);
+				new_header->header.alloc = 0;
+				new_header->header.splinter = 0;
+				new_header->header.block_size = newSize / 16;
+				new_header->next = next_block->next;
+				new_header->prev = next_block->prev;
+			}
+		}
+		else{									//No splinter, new free block
+			bp->header.block_size = block_size / 16;
+			((sf_footer*)((char*)bp + block_size - SF_FOOTER_SIZE))->block_size = block_size / 16;
+			((sf_footer*)((char*)bp + block_size - SF_FOOTER_SIZE))->alloc = 0;
+			((sf_footer*)((char*)bp + block_size - SF_FOOTER_SIZE))->splinter = 0;
+			sf_free_header* new_free_block = ((sf_free_header*)(char*)bp + block_size);
+			new_free_block->header.block_size = (curr_block_size - block_size) / 16;
+			new_free_block->header.alloc = 0;
+			new_free_block->header.splinter = 0;
+			((sf_footer*)((char*)new_free_block + (curr_block_size - block_size) - SF_FOOTER_SIZE))->block_size = (curr_block_size - block_size) / 16;
+			((sf_footer*)((char*)new_free_block + (curr_block_size - block_size) - SF_FOOTER_SIZE))->alloc = 0;
+
+			sf_free_header* currBlock = freelist_head;
+			if(currBlock == NULL){
+				freelist_head = new_free_block;
+				return ptr;
+			}
+
+			sf_free_header* spot = NULL;
+			while(currBlock != NULL){
+				if(new_free_block > currBlock)
+					spot = currBlock;
+				currBlock = currBlock->next;
+			}
+			if(spot == NULL){
+				freelist_head->prev = new_free_block;
+				new_free_block->next = freelist_head;
+				freelist_head = new_free_block;
+			}
+			else if(spot->next == NULL){
+				spot->next = new_free_block;
+				new_free_block->prev = spot;
+				}
+				else{
+					new_free_block->prev = spot;
+					new_free_block->next = spot->next;
+					spot->next->prev = new_free_block;
+					spot->next = new_free_block;
+				}
+			coalesce(new_free_block);
+			return ptr;
+		}
+	}
+		else{									//Growing block
+			if(((sf_free_header*)((char*)bp + curr_block_size))->header.alloc == 0){
+
+			}
+			else{
+				sf_free_header* spot = find_fit(size);
+				if(spot == NULL){
+					if(sf_sbrk(4096) == (void*)-1)
+						return NULL;
+					else
+						spot = find_fit(size);
+				}
+				memcpy(spot, bp, block_size);
+				sf_free(spot);
+				spot->header.block_size = block_size / 16;
+				spot->header.alloc = 1;
+				((sf_footer*)((char*)spot + block_size - SF_FOOTER_SIZE))->block_size = block_size / 16;
+				((sf_footer*)((char*)spot + block_size - SF_FOOTER_SIZE))->alloc = 1;
+				return (char*)spot + SF_HEADER_SIZE;
+			}
+		}
 	return NULL;
 }
 
