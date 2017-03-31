@@ -2,7 +2,7 @@
 
 char** getArgs(char* cmd){
 	int bufferSize = 64, pos = 0;
-	char* delimiters = " \n";
+	char* delimiters = " :\"\n";
 	char** tokens = malloc(bufferSize * sizeof(char*));
 	if(tokens == NULL){
 		printf("malloc error: %s\n", strerror(errno));

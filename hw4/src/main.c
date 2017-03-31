@@ -1,6 +1,7 @@
 #include "sfish.h"
 #include "debug.h"
 #include "builtin.h"
+#include "executable.h"
 
 /*
  * As in previous hws the main function must be in its own file!
@@ -18,7 +19,7 @@ int main(int argc, char const *argv[], char* envp[]){
     strcat(prompt, getenv("PWD"));
     strcat(prompt,"> $");
     while((cmd = readline(prompt)) != NULL) {
-        //strcpy(cmd, "cd\n");
+        //strcpy(cmd, "echo hehe\n");
         if (strcmp(cmd, "exit") == 0)
             exit(EXIT_SUCCESS);
         //printf("%s\n",cmd);
@@ -33,6 +34,9 @@ int main(int argc, char const *argv[], char* envp[]){
                     cd(" ");
                 else
                     cd(args[1]);
+            }
+            else{
+                sfish_exec(args);
             }
 
         /* All your debug print statements should use the macros found in debu.h */
