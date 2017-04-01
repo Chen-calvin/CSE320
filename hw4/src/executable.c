@@ -1,19 +1,24 @@
 #include "executable.h"
 #include "sfish.h"
 
-void sfish_exec(char** args){
+int sfish_exec(char** args){
 	typedef struct stat stats;
-	char* fullPath;
+	char fullPath[1024];
 	stats* fileStats = malloc(sizeof(stats));
+	if(fileStats == NULL){
+		printf("malloc error: %s\n", strerror(errno));
+		return -1;
+	}
 	char* tmp = getenv("PATH");
 	char* searchPaths = strdup(tmp);
 	if(strchr(args[0], '/') != NULL){
-		fullPath = getenv("PWD");
+		tmp = getenv("PWD");
+		strcpy(fullPath,tmp);
 		strcat(fullPath, "/");
 		strcat(fullPath, args[0]);
 		if(stat(fullPath, fileStats) == -1){
 			printf("stat error: %s\n", strerror(errno));
-			return;
+			return -1;
 		}
 	}
 	else{
@@ -22,7 +27,7 @@ void sfish_exec(char** args){
 		int pos = 0;
 		char* currPath = searchPathsArray[pos];
 		while(currPath != NULL){
-			fullPath = strdup(currPath);
+			strcpy(fullPath, currPath);
 			strcat(fullPath, "/");
 			strcat(fullPath, args[0]);
 			// printf("currPath%d: %s\n", pos, currPath);
@@ -36,7 +41,7 @@ void sfish_exec(char** args){
 		free(searchPathsArray);
 		if(currPath == NULL){
 			printf("stat error: %s\n", strerror(errno));
-			return;
+			return -1;
 		}
 	}
 
@@ -44,14 +49,18 @@ void sfish_exec(char** args){
 	int child_status;
 	if((pid = fork()) < 0){
 		printf("pwd fork error: %s\n", strerror(errno));
-		exit(EXIT_SUCCESS);
+		exit(EXIT_FAILURE);
 	}
 
 	if(pid == 0){
-		execv(fullPath, args);
+		if((execv(fullPath, args)) < 0){
+			printf("execv error: %s\n", strerror(errno));
+			exit(EXIT_FAILURE);
+		}
 	}
-	else
+	else{
 		wait(&child_status);
+	}
 	free(searchPaths);
-
+	return 1;
 }

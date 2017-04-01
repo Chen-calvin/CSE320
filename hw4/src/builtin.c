@@ -1,7 +1,5 @@
 #include "builtin.h"
 
-
-
 void help(){
 	printf("help\n");
 	printf("exit\n");
@@ -14,7 +12,7 @@ void pwd(){
 	int child_status;
 	if((pid = fork()) < 0){
 		printf("pwd fork error: %s\n", strerror(errno));
-		exit(EXIT_SUCCESS);
+		exit(EXIT_FAILURE);
 	}
 
 	if(pid == 0){
@@ -36,12 +34,10 @@ void pwd(){
 void cd(char* flags){
 	char* lastDir = "-";
 	char* homeDir = " ";
-	char* prevDir = "..";
-	char* currDir = ".";
+	//char* prevDir = "..";
+	//char* currDir = ".";
 
-	if(strcmp(flags, currDir) == 0)
-		(void)0;
-	else if(strcmp(flags, lastDir) == 0){
+	if(strcmp(flags, lastDir) == 0){
 		char* pwd = getenv("OLDPWD");
 		chdir(pwd);
 		setenv("OLDPWD", getenv("PWD"), 1);
@@ -54,13 +50,6 @@ void cd(char* flags){
 			setenv("PWD", pwd, 1);
 			setenv("OLDPWD", oldPwd, 1);
 		}
-			else if(strcmp(flags, prevDir) == 0){
-				char* oldPwd = getenv("PWD");
-				char* pwd = dirname(getenv("PWD"));
-				chdir(pwd);
-				setenv("OLDPWD", oldPwd, 1);
-				setenv("PWD", pwd, 1);
-			}
 			else{
 				char* tmp = getenv("PWD");
 				char path[1024];
@@ -72,7 +61,12 @@ void cd(char* flags){
 					return;
 				}
 				setenv("OLDPWD", tmp, 1);
-				setenv("PWD", path, 1);
+				char newPWD[1024];
+				if(getcwd(newPWD, 1024) == NULL){
+					printf("getcwd error: %s\n", strerror(errno));
+					return;
+				}
+				setenv("PWD", newPWD, 1);
 			}
 }
 

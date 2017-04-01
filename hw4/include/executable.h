@@ -8,6 +8,6 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-void sfish_exec(char** args);
+int sfish_exec(char** args);
 
 #endif
