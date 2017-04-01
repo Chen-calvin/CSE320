@@ -149,7 +149,7 @@ void outputRedirection(char* program[], char* file){
 		return;
 	}
 
-	if((fd = open(file, O_WRONLY | O_TRUNC)) < 0){
+	if((fd = open(file, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR)) < 0){
 		printf("Open error: %s\n", strerror(errno));
 		return;
 	}
