@@ -20,11 +20,13 @@ void sigalrm_handler(int sig){
 }
 
 void sigusr2_handler(int sig){
-	write(STDOUT_FILENO, "\nWell that was easy..", 20);
+	printf("Well that was easy..");
+	fflush(stdout);
 }
 
-void sigchld_handler(int sig){
-	//printf("Child with PID %d has died. It spent %d milliseconds utilizing the CPU.",,);
+void sigchld_handler(int sig, siginfo_t *sip, void *notused){
+	printf("Child with PID %d has died. It spent %f milliseconds utilizing the CPU.\n",sip->si_pid, (double)((sip->si_utime + sip->si_stime) * 1000));
+	fflush(stdout);
 }
 
 void init_signal(){
@@ -35,4 +37,12 @@ void init_signal(){
 
 	signal(SIGUSR2, sigusr2_handler);
 	signal(SIGALRM, sigalrm_handler);
+
+	struct sigaction action;
+
+	action.sa_sigaction = &sigchld_handler; /* Note use of sigaction, not handler */
+	sigfillset (&action.sa_mask);
+	action.sa_flags = SA_SIGINFO; /* Note flag - otherwise NULL in function */
+
+	sigaction (SIGCHLD, &action, NULL);
 }
