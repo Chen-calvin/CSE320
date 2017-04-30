@@ -12,8 +12,6 @@ void init_key(){
 
 void *foreach_init(arraylist_t *self){
     void *ret = NULL;
-    if(pthread_key_create(&iterator, NULL) != 0)
-        return ret;
     pthread_once(&once, init_key);
     int* num = malloc(sizeof(int));
     *num = 0;
@@ -22,6 +20,10 @@ void *foreach_init(arraylist_t *self){
 
     if(self->length == 0)
         return NULL;
+    self -> readcnt++;
+    if(self -> readcnt == 1)
+        if(sem_wait(&(self -> write_mutex)) == -1)  //if first thread to read, lock writing
+            return ret;
     return get_index_al(self, 0);
 
     return ret;
@@ -38,8 +40,14 @@ void *foreach_next(arraylist_t *self, void* data){
         return ret;
 
     int index = *(int*)indexPtr;
-    if(index = self->length)
+    if(index == self->length - 1){
+        self -> readcnt--;
+        if(self -> readcnt == 0)
+        if(sem_post(&(self -> write_mutex)) == -1)  //if last thread to read, unlock writing
+            return ret;
+
         return NULL;
+    }
     if(data != NULL){
         void* ptr = (char*)(self->base) + index * self->item_size;
         memcpy(ptr, data, self->item_size);
@@ -49,8 +57,10 @@ void *foreach_next(arraylist_t *self, void* data){
     index++;
     int* newIdxPtr = malloc(sizeof(int));
     *newIdxPtr = index;
-    if(pthread_setspecific(iterator, newIdxPtr) != 0)
+    if(pthread_setspecific(iterator, newIdxPtr) == 0){
+        ret = get_index_al(self, index);
         return ret;
+    }
 
     return NULL;
 }
